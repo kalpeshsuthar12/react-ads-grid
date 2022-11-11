@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios'
 import Grid from './Components/Grid';
 import './index.css'
 
@@ -7,48 +8,42 @@ function App() {
   const [data, setData] = useState("");
   const [query, setQuery] = useState("");
 
-  const fetchData = async () => {
-    const url = "http://localhost:8000/api/v1/companys";
-    const response = await fetch(url);
-    const json = await response.json();
-    const results = json.data
-    setData(results);
+  const submitHandler = (e) => {
+    e.preventDefault();
+    axios({
+      method: 'post',
+      url: 'http://localhost:8000/api/v1/companys',
+      data: {
+        query: query
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      }
+    }).then((response) => {
+      if (response.status === 200) {
+        console.log(response)
+        setData(response.data.data);
+      }
+    })
+      .catch((response) => console.log('error', response));
   }
-  
-  useEffect(() => {
-    fetchData();
-  }, [])
 
   return (
     <div className="App">
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
-        <div className="input-group mb-3">
-          <input type="text" className="form-control" onChange={event => setQuery(event.target.value)} placeholder="Search" />
-          <div className="input-group-append">
-            <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        <form onSubmit={submitHandler} className="w-100">
+          <div className="input-group mb-3">
+            <input type="text" className="form-control" onChange={event => setQuery(event.target.value)} placeholder="Search" />
+            <div className="input-group-append">
+              <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </div>
           </div>
-        </div>
+        </form>
       </nav>
       <div className="container">
         <div className="grid">
           {
-            Array.from(data).filter(post => {    
-              if (query === '') {
-                return post;
-              } else if (post.name.toLowerCase().includes(query.toLowerCase())) {
-                return post;
-              }
-              else if (post.company_info.description.toLowerCase().includes(query.toLowerCase())) {
-                return post;
-              }
-              else if (post.company_info.headline.toLowerCase().includes(query.toLowerCase())) {
-                return post;
-              }
-              else if (post.company_info.primaryText.toLowerCase().includes(query.toLowerCase())) {
-                return post;
-              }
-              return null;
-            }).map((post, index) => (
+            Array.from(data).map((post, index) => (
               <Grid data={post} key={index}></Grid>
             ))
           }
